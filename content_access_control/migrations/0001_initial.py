@@ -10,10 +10,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     initial = True
 
-    dependencies = [
-        ("contenttypes", "0002_remove_content_type_name"),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-    ]
+    dependencies = [ ]
 
     operations = [
         migrations.CreateModel(
