@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class ContentAccessControlConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "django_content_access_control"
+    name = "content_access_control"
 
     def ready(self):
         from django.conf import settings  # noqa
