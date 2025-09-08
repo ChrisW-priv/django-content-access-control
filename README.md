@@ -29,8 +29,13 @@ Django admin panel.
 
 ## Setup
 
-1.**Install the app:**
-  Add `django_content_access_control` to your `INSTALLED_APPS` in `settings.py`:
+1. **Install the app:**
+
+```sh
+pip install django-content-access-control
+```
+
+Then, add `django_content_access_control` to your `INSTALLED_APPS` in `settings.py`:
 
 ```python
 INSTALLED_APPS = [
@@ -40,34 +45,23 @@ INSTALLED_APPS = [
 ]
 ```
 
-2.  **Configure Casbin:**
-  In your `settings.py`, you need to specify the path to your Casbin model
-  configuration file.
+Do not forget to run migrations:
+
+```sh
+python manage.py migrate
+```
+
+2. **Configure Casbin:**
+
+In your `settings.py`, you need to specify the path to your Casbin model
+configuration file.
 
 ```python
 # settings.py
-CASBIN_MODEL = str(BASE_DIR / "dauthz_model.conf")
+CASBIN_MODEL = str(BASE_DIR / "casbin_model.conf")
 ```
 
-An example `dauthz_model.conf` might look like this:
-
-```ini
-[request_definition]
-r = sub, obj, act
-
-[policy_definition]
-p = sub, obj, act
-
-[role_definition]
-g = _, _
-g2 = _, _
-
-[policy_effect]
-e = some(where (p.eft == allow))
-
-[matchers]
-m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
-```
+An example `casbin_model.conf` files are in the `model_examples/` directory.
 
 3.**Protect DRF Endpoints (Optional):**
   To automatically protect your Django Rest Framework views, add
@@ -116,7 +110,9 @@ and deleting access rules for instances of that model.
 In the `admin.py` of one of your apps, use the `register_permission_admin`
 function.
 
-#### Simple Example
+#### Examples
+
+##### Single Action
 Registering the `Feature` model with a single "access" action.
 
 ```python
@@ -131,7 +127,7 @@ class FeatureAdmin(admin.ModelAdmin):
 register_permission_admin(Feature, ["access"])
 ```
 
-#### Complex Example
+##### Multiple Actions
 Registering the `Chunk` model with multiple actions.
 
 ```python
@@ -161,8 +157,16 @@ or `PolicySubjectGroup`) specific actions on `Chunk` objects.
 
 - **For Model Instances:** The permissions you define using the dynamically
   created admin panels (e.g., "Feature Content Access Permission") create
-  policies that link subjects to specific model instances. You can then write
-  custom logic to enforce these permissions using the `casbin.enforcer`.
+  policies that link subjects to specific model instances. You can integrate
+  Pycasbin with Django authentication system. To enable the backend, you need to
+  specify it in settings.py.
+
+```py
+AUTHENTICATION_BACKENDS = [
+  "dauthz.backends.CasbinBackend",
+  "django.contrib.auth.backends.ModelBackend",
+]
+```
 
 ### Customizing Admin Widgets
 
