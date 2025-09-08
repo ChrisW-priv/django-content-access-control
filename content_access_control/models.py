@@ -104,7 +104,7 @@ class ContentAccessPermission(AddRemovePermissionPolicyMixin, models.Model):
 
 class PolicySubject(AddRemoveGroupingPolicyMixin, ObjectIdentifierMixin, models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="default")
     content_access_permission = GenericRelation(
         ContentAccessPermission,
         content_type_field="subject_content_type",
@@ -115,7 +115,7 @@ class PolicySubject(AddRemoveGroupingPolicyMixin, ObjectIdentifierMixin, models.
         return (self.user.username, self.unique_object_instance_identifier)
 
     def __str__(self):
-        return self.user.username
+        return f'{self.user.username} - {self.name}'
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
