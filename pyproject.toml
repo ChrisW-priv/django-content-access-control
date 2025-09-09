@@ -1,6 +1,6 @@
 [project]
 name = "django-content-access-control"
-version = "0.4.0"
+version = "0.3.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,6 +15,6 @@ django-content-access-control = { workspace = true }
 [dependency-groups]
 dev = [
     "django-content-access-control",
- "django-ensuresuperuser>=0.1.1",
- "ruff>=0.12.12",
+    "django-ensuresuperuser>=0.1.1",
+    "ruff>=0.12.12",
 ]
