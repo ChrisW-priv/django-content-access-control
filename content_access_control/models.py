@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 from content_access_control.policy_mixins import (
     AddRemovePermissionPolicyMixin,
@@ -125,11 +125,6 @@ class PolicySubjectGroup(
     parent_group = models.ForeignKey(
         "self", on_delete=models.CASCADE, null=True, blank=True
     )
-    content_access_permission = GenericRelation(
-        ContentAccessPermission,
-        content_type_field="subject_content_type",
-        object_id_field="subject_id",
-    )
 
     @property
     def access_policy_identifiers(self):
@@ -203,11 +198,6 @@ class Feature(
     models.Model,
 ):
     name = models.CharField(max_length=255)
-    content_access_permission = GenericRelation(
-        ContentAccessPermission,
-        content_type_field="resource_content_type",
-        object_id_field="resource_id",
-    )
 
     class Meta:
         constraints = [
