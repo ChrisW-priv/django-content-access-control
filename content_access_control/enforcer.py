@@ -24,7 +24,7 @@ class ProxyEnforcer(Enforcer):
         if self._initialized is False:
             logger.info("Performing deferred casbin enforcer initialisation")
             self._initialized = True
-            model = getattr(settings, "CASBIN_MODEL")
+            model = str(getattr(settings, "CASBIN_MODEL"))
             adapter_loc = getattr(
                 settings, "CASBIN_ADAPTER", "content_access_control.adapter.Adapter"
             )

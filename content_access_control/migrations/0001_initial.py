@@ -7,100 +7,220 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CasbinRule',
+            name="CasbinRule",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ptype', models.CharField(max_length=255)),
-                ('v0', models.CharField(blank=True, max_length=255)),
-                ('v1', models.CharField(blank=True, max_length=255)),
-                ('v2', models.CharField(blank=True, max_length=255)),
-                ('v3', models.CharField(blank=True, max_length=255)),
-                ('v4', models.CharField(blank=True, max_length=255)),
-                ('v5', models.CharField(blank=True, max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("ptype", models.CharField(max_length=255)),
+                ("v0", models.CharField(blank=True, max_length=255)),
+                ("v1", models.CharField(blank=True, max_length=255)),
+                ("v2", models.CharField(blank=True, max_length=255)),
+                ("v3", models.CharField(blank=True, max_length=255)),
+                ("v4", models.CharField(blank=True, max_length=255)),
+                ("v5", models.CharField(blank=True, max_length=255)),
             ],
         ),
         migrations.CreateModel(
-            name='ContentAccessPermission',
+            name="ContentAccessPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('subject_id', models.PositiveIntegerField()),
-                ('resource_id', models.PositiveIntegerField()),
-                ('action', models.CharField(max_length=255)),
-                ('resource_content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='resource_type', to='contenttypes.contenttype')),
-                ('subject_content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='subject_type', to='contenttypes.contenttype')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("subject_id", models.PositiveIntegerField()),
+                ("resource_id", models.PositiveIntegerField()),
+                ("action", models.CharField(max_length=255)),
+                (
+                    "resource_content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="resource_type",
+                        to="contenttypes.contenttype",
+                    ),
+                ),
+                (
+                    "subject_content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="subject_type",
+                        to="contenttypes.contenttype",
+                    ),
+                ),
             ],
-            bases=(content_access_control.policy_mixins.AddRemovePermissionPolicyMixin, content_access_control.policy_mixins.AddRemovePolicyMixin, models.Model),
+            bases=(
+                content_access_control.policy_mixins.AddRemovePermissionPolicyMixin,
+                content_access_control.policy_mixins.AddRemovePolicyMixin,
+                models.Model,
+            ),
         ),
         migrations.CreateModel(
-            name='FeatureContentAccessPermission',
+            name="FeatureContentAccessPermission",
+            fields=[],
+            options={
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
+            },
+            bases=("content_access_control.contentaccesspermission",),
+        ),
+        migrations.CreateModel(
+            name="Feature",
             fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
             ],
             options={
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("name",), name="unique_feature_name_constraint"
+                    )
+                ],
             },
-            bases=('content_access_control.contentaccesspermission',),
+            bases=(
+                content_access_control.policy_mixins.ObjectIdentifierMixin,
+                models.Model,
+            ),
         ),
         migrations.CreateModel(
-            name='Feature',
+            name="PolicySubject",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(default="default", max_length=255)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('name',), name='unique_feature_name_constraint')],
+                "abstract": False,
             },
-            bases=(content_access_control.policy_mixins.ObjectIdentifierMixin, models.Model),
+            bases=(
+                content_access_control.policy_mixins.AddRemoveGroupingPolicyMixin,
+                content_access_control.policy_mixins.AddRemovePolicyMixin,
+                content_access_control.policy_mixins.ObjectIdentifierMixin,
+                models.Model,
+            ),
         ),
         migrations.CreateModel(
-            name='PolicySubject',
+            name="PolicySubjectGroup",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(default='default', max_length=255)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "parent_group",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="content_access_control.policysubjectgroup",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=(content_access_control.policy_mixins.AddRemoveGroupingPolicyMixin, content_access_control.policy_mixins.AddRemovePolicyMixin, content_access_control.policy_mixins.ObjectIdentifierMixin, models.Model),
+            bases=(
+                content_access_control.policy_mixins.AddRemoveGroupingPolicyMixin,
+                content_access_control.policy_mixins.ObjectIdentifierMixin,
+                models.Model,
+            ),
         ),
         migrations.CreateModel(
-            name='PolicySubjectGroup',
+            name="SubjectToGroup",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('parent_group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='content_access_control.policysubjectgroup')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "subject",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="content_access_control.policysubject",
+                    ),
+                ),
+                (
+                    "subject_group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="content_access_control.policysubjectgroup",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=(content_access_control.policy_mixins.AddRemoveGroupingPolicyMixin, content_access_control.policy_mixins.ObjectIdentifierMixin, models.Model),
-        ),
-        migrations.CreateModel(
-            name='SubjectToGroup',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='content_access_control.policysubject')),
-                ('subject_group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='content_access_control.policysubjectgroup')),
-            ],
-            options={
-                'abstract': False,
-            },
-            bases=(content_access_control.policy_mixins.AddRemoveGroupingPolicyMixin, content_access_control.policy_mixins.AddRemovePolicyMixin, content_access_control.policy_mixins.ObjectIdentifierMixin, models.Model),
+            bases=(
+                content_access_control.policy_mixins.AddRemoveGroupingPolicyMixin,
+                content_access_control.policy_mixins.AddRemovePolicyMixin,
+                content_access_control.policy_mixins.ObjectIdentifierMixin,
+                models.Model,
+            ),
         ),
         migrations.AddConstraint(
-            model_name='contentaccesspermission',
-            constraint=models.UniqueConstraint(fields=('subject_content_type', 'subject_id', 'resource_content_type', 'resource_id', 'action'), name='unique_subject_resource'),
+            model_name="contentaccesspermission",
+            constraint=models.UniqueConstraint(
+                fields=(
+                    "subject_content_type",
+                    "subject_id",
+                    "resource_content_type",
+                    "resource_id",
+                    "action",
+                ),
+                name="unique_subject_resource",
+            ),
         ),
     ]

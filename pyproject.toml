@@ -13,4 +13,8 @@ exclude = ["model_examples*", "test_project*"]
 django-content-access-control = { workspace = true }
 
 [dependency-groups]
-dev = ["django-content-access-control", "ruff>=0.12.12"]
+dev = [
+    "django-content-access-control",
+ "django-ensuresuperuser>=0.1.1",
+ "ruff>=0.12.12",
+]

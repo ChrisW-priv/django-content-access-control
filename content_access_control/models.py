@@ -91,10 +91,25 @@ class ContentAccessPermission(
         )
 
     def __str__(self):
-        # TODO: THIS MODEL NAMES SHOULD NOT BE RETRIEVED LIKE THIS, USE THE CONTENTTYPE INSTEAD
-        sub_type_str = self.subject._meta.model_name
-        res_type_str = self.resource._meta.model_name
-        return f"{sub_type_str} {self.subject} can do: {self.action} on {res_type_str} {self.resource}"
+        # Use ContentType to avoid accessing the actual related objects
+        try:
+            sub_app_label = self.subject_content_type.app_label
+            sub_model = self.subject_content_type.model
+            sub_label = f"{sub_app_label}.{sub_model}"
+        except Exception:
+            sub_label = "unknown.subject"
+
+        try:
+            res_app_label = self.resource_content_type.app_label
+            res_model = self.resource_content_type.model
+            res_label = f"{res_app_label}.{res_model}"
+        except Exception:
+            res_label = "unknown.resource"
+
+        # Prefer IDs to avoid fetching GenericForeignKey instances.
+        # If you still want best-effort human-readable names without hard failures,
+        # you can try to use str(self.subject) / str(self.resource) guarded by try/except.
+        return f'{sub_label}({self.subject_id}) can do: "{self.action}" on {res_label}({self.resource_id})'
 
 
 class PolicySubject(
@@ -142,7 +157,7 @@ class PolicySubjectGroup(
         super().delete(*args, **kwargs)
         if not self.parent_group:
             return
-        self.remove_policy()
+        self.remove_access_permission_policy()
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -155,12 +170,12 @@ class PolicySubjectGroup(
             # Delete the old grouping policy
             old_instance = PolicySubjectGroup.objects.get(pk=self.pk)
             if old_instance.parent_network:
-                old_instance.remove_policy()
+                old_instance.remove_access_permission_policy()
 
         super().save(*args, **kwargs)
         if not self.parent_group:
             return
-        self.add_policy()
+        self.add_access_permission_policy()
 
 
 class SubjectToGroup(

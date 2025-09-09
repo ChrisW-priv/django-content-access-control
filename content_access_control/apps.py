@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.core.exceptions import ImproperlyConfigured
 
 
 class ContentAccessControlConfig(AppConfig):
@@ -7,9 +8,11 @@ class ContentAccessControlConfig(AppConfig):
 
     def ready(self):
         from django.conf import settings  # noqa
+        from .core import enforcer  # noqa
 
-        load_eager = getattr(settings, "CONTENT_ACCESS_CONTROL_LOAD_EAGER", False)
-        if load_eager:
-            from .core import enforcer  # noqa
+        try:
+            getattr(settings, "CASBIN_MODEL")
+        except AttributeError:
+            raise ImproperlyConfigured("CASBIN_MODEL must be set in settings.py")
 
-            enforcer._load()
+        enforcer._load()
