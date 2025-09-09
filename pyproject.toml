@@ -4,16 +4,13 @@ version = "0.4.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "casbin>=1.43.0",
-    "django>=4.2",
- "pycasbin>=2.2.0",
-]
+dependencies = ["casbin>=1.43.0", "django>=4.2", "pycasbin>=2.2.0"]
 
 [tool.setuptools.packages.find]
-exclude = ["model_examples*"]
+exclude = ["model_examples*", "test_project*"]
+
+[tool.uv.sources]
+django-content-access-control = { workspace = true }
 
 [dependency-groups]
-dev = [
-    "ruff>=0.12.12",
-]
+dev = ["django-content-access-control", "ruff>=0.12.12"]

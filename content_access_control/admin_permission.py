@@ -173,7 +173,6 @@ class _ResourcePermissionAdminFactory:
             (),
             {
                 "model": proxy_model,
-                "abstract": True,
                 "fields": list(form_fields.keys()),
             },
         )
