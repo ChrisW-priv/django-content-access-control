@@ -30,7 +30,9 @@ class CasbinBackend(ModelBackend):
 
         perm_cache_name = f"_{from_name}_perm_cache"
         if not hasattr(user_obj, perm_cache_name):
-            policies = self.enforcer.get_implicit_permissions_for_user(user_obj.username)
+            policies = self.enforcer.get_implicit_permissions_for_user(
+                user_obj.username
+            )
             perms = tuple(map(tuple, policies))
             setattr(user_obj, perm_cache_name, perms)
         return getattr(user_obj, perm_cache_name)

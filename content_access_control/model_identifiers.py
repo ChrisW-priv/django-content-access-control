@@ -28,9 +28,3 @@ def str_to_instance(instance_str: str) -> models.Model:
 
     model = apps.get_model(app_label=app_label, model_name=model_name)
     return model.objects.get(pk=pk_str)
-
-
-class ObjectIdentifierMixin:
-    @property
-    def unique_object_instance_identifier(self) -> str:
-        return instance_to_str(self)

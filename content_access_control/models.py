@@ -6,8 +6,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from content_access_control.policy_mixins import (
     AddRemovePermissionPolicyMixin,
     AddRemoveGroupingPolicyMixin,
+    PolicyLifecycleMixin,
+    ObjectIdentifierMixin,
+    SubjectAccessPermissionMixin,
+    ResourceAccessPermissionMixin,
 )
-from content_access_control.model_identifiers import ObjectIdentifierMixin
 
 
 class ExpectedModel(ObjectIdentifierMixin, models.Model):
@@ -45,7 +48,9 @@ class CasbinRule(models.Model):
         return '<CasbinRule {}: "{}">'.format(self.id, str(self))
 
 
-class ContentAccessPermission(AddRemovePermissionPolicyMixin, models.Model):
+class ContentAccessPermission(
+    PolicyLifecycleMixin, AddRemovePermissionPolicyMixin, models.Model
+):
     """
     Model used to encapsulate a generic link between
     "which *subject* can do which *action* on which *resource*"
@@ -77,7 +82,8 @@ class ContentAccessPermission(AddRemovePermissionPolicyMixin, models.Model):
             )
         ]
 
-    def get_identifiers(self):
+    @property
+    def access_policy_identifiers(self):
         return (
             get_uuid_of_model(self.subject),
             get_uuid_of_model(self.resource),
@@ -85,49 +91,35 @@ class ContentAccessPermission(AddRemovePermissionPolicyMixin, models.Model):
         )
 
     def __str__(self):
+        # TODO: THIS MODEL NAMES SHOULD NOT BE RETRIEVED LIKE THIS, USE THE CONTENTTYPE INSTEAD
         sub_type_str = self.subject._meta.model_name
         res_type_str = self.resource._meta.model_name
         return f"{sub_type_str} {self.subject} can do: {self.action} on {res_type_str} {self.resource}"
 
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
-        self.remove_policy()
 
-    def save(self, *args, **kwargs):
-        if self.pk:
-            old_instance = ContentAccessPermission.objects.get(pk=self.pk)
-            old_instance.remove_policy()
-
-        super().save(*args, **kwargs)
-        self.add_policy()
-
-
-class PolicySubject(AddRemoveGroupingPolicyMixin, ObjectIdentifierMixin, models.Model):
+class PolicySubject(
+    SubjectAccessPermissionMixin,
+    PolicyLifecycleMixin,
+    AddRemoveGroupingPolicyMixin,
+    ObjectIdentifierMixin,
+    models.Model,
+):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, default="default")
-    content_access_permission = GenericRelation(
-        ContentAccessPermission,
-        content_type_field="subject_content_type",
-        object_id_field="subject_id",
-    )
 
-    def get_identifiers(self):
+    @property
+    def access_policy_identifiers(self):
         return (self.user.username, self.unique_object_instance_identifier)
 
     def __str__(self):
-        return f'{self.user.username} - {self.name}'
-
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
-        self.remove_policy()
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        self.add_policy()
+        return f"{self.user.username} - {self.name}"
 
 
 class PolicySubjectGroup(
-    AddRemoveGroupingPolicyMixin, ObjectIdentifierMixin, models.Model
+    SubjectAccessPermissionMixin,
+    AddRemoveGroupingPolicyMixin,
+    ObjectIdentifierMixin,
+    models.Model,
 ):
     name = models.CharField(max_length=255)
     parent_group = models.ForeignKey(
@@ -139,7 +131,8 @@ class PolicySubjectGroup(
         object_id_field="subject_id",
     )
 
-    def get_identifiers(self):
+    @property
+    def access_policy_identifiers(self):
         return (
             self.unique_object_instance_identifier,
             self.parent_group.unique_object_instance_identifier,
@@ -159,9 +152,10 @@ class PolicySubjectGroup(
     def save(self, *args, **kwargs):
         if self.pk:
             # Check if not self-referential
-            assert self.parent_network_id != self.pk, (
-                "Network parent cannot reference the network itself, choose different parent or set to null"
-            )
+            if self.parent_network_id == self.pk:
+                raise ValueError(
+                    "Network parent cannot reference the network itself, choose different parent or set to null"
+                )
 
             # Delete the old grouping policy
             old_instance = PolicySubjectGroup.objects.get(pk=self.pk)
@@ -174,11 +168,17 @@ class PolicySubjectGroup(
         self.add_policy()
 
 
-class SubjectToGroup(AddRemoveGroupingPolicyMixin, ObjectIdentifierMixin, models.Model):
+class SubjectToGroup(
+    PolicyLifecycleMixin,
+    AddRemoveGroupingPolicyMixin,
+    ObjectIdentifierMixin,
+    models.Model,
+):
     subject = models.ForeignKey(PolicySubject, on_delete=models.CASCADE)
     subject_group = models.ForeignKey(PolicySubjectGroup, on_delete=models.CASCADE)
 
-    def get_identifiers(self):
+    @property
+    def access_policy_identifiers(self):
         return (
             self.subject.unique_object_instance_identifier,
             self.subject_group.unique_object_instance_identifier,
@@ -186,18 +186,6 @@ class SubjectToGroup(AddRemoveGroupingPolicyMixin, ObjectIdentifierMixin, models
 
     def __str__(self):
         return f'Subject: "{self.subject}", assigned to: "{self.subject_group}"'
-
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
-        self.remove_policy()
-
-    def save(self, *args, **kwargs):
-        if self.pk:
-            # Delete the old grouping policy
-            old_instance = SubjectToGroup.objects.get(pk=self.pk)
-            old_instance.remove_policy()
-        super().save(*args, **kwargs)
-        self.add_policy()
 
 
 ModelType = models.Model | ExpectedModel
@@ -209,7 +197,11 @@ def get_uuid_of_model(model_instance: ModelType):
     return str(model_instance)
 
 
-class Feature(ObjectIdentifierMixin, models.Model):
+class Feature(
+    ResourceAccessPermissionMixin,
+    ObjectIdentifierMixin,
+    models.Model,
+):
     name = models.CharField(max_length=255)
     content_access_permission = GenericRelation(
         ContentAccessPermission,

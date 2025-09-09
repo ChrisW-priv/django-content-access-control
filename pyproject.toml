@@ -1,6 +1,6 @@
 [project]
 name = "django-content-access-control"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,3 +12,8 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 exclude = ["model_examples*"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.12",
+]
