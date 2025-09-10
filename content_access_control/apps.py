@@ -15,4 +15,6 @@ class ContentAccessControlConfig(AppConfig):
         except AttributeError:
             raise ImproperlyConfigured("CASBIN_MODEL must be set in settings.py")
 
-        enforcer._load()
+        eager_load = getattr(settings, "CASBIN_EAGER_POLICY_LOAD", False)
+        if eager_load:
+            enforcer._load()
